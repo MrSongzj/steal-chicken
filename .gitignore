@@ -1,0 +1,84 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+jspm_packages/
+.bower_components/
+
+# Environment files
+.env
+.env.*
+!.env.example  # 保留示例配置文件
+
+# Build output
+dist/
+build/
+out/
+coverage/
+.cache/
+.next/
+.nuxt/
+temp/
+tmp/
+typedoc/
+storybook-static/
+
+# TypeScript cache/output
+*.tsbuildinfo
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Optional npm cache directory
+.npm
+.yarn
+.pnpm-store
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Optional coverage directory
+coverage/
+
+# Local serverless directories
+.serverless/
+.functions/
+
+# Docker
+docker-compose.override.yml
+*.local.yml
+
+# Lock files (if using only one package manager, you can comment others)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Misc
