@@ -1,22 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import type { KLineRaw } from "./uiComponents/KLineChart";
 import KLineChart from "./uiComponents/KLineChart";
+import { getAlphaTraceList, getKLines, type KLineRaw } from "./services/api";
 
 // const response = {
 //   data: {
 //     klineInfos: [
-//       [
-//         "1760443200000",
-//         "0.078216207664238734",
-//         "0.07831105639795069",
-//         "0.07411111",
-//         "0.075846907359439283",
-//         "2485337.84339780324",
-//         "1760446800000",
-//       ],
+//       ["1760400000000", "0.0780", "0.0786", "0.0774", "0.0783", "1854321", "1760403600000"],
+//       ["1760403600000", "0.0783", "0.0789", "0.0778", "0.0780", "1923344", "1760407200000"],
+//       ["1760407200000", "0.0780", "0.0784", "0.0772", "0.0776", "2012345", "1760410800000"],
+//       ["1760410800000", "0.0776", "0.0781", "0.0769", "0.0779", "2234567", "1760414400000"],
+//       ["1760414400000", "0.0779", "0.0788", "0.0775", "0.0785", "2319988", "1760418000000"],
 //     ],
 //   },
 // };
@@ -90,7 +86,7 @@ export const response = {
 
 
 function App() {
-  const [count, setCount] = useState(0);
+  // const [count, setCount] = useState(0);
 
   // return (
   //   <>
@@ -117,12 +113,27 @@ function App() {
   //   </>
   // )
 
-  const klineInfos = response.data.klineInfos as KLineRaw[];
+  // const klineInfos = response.data.klineInfos as KLineRaw[];
+
+  const [klineInfos, setKlineInfos] = useState<KLineRaw[]>([]);
+
+  useEffect(() => {
+    getAlphaTraceList().then(res => {
+      if (res.length > 0) {
+        const alpha = res[0];
+        getKLines(alpha, '1h').then(klines => {
+          setKlineInfos(klines);
+        });
+      }
+    });
+  }, []);
 
   return (
-    <div style={{width: '1000px', height: '500px', backgroundColor: 'red'}}>
-      <KLineChart klineInfos={klineInfos} height={400} />
-    </div>
+    <>
+      <div style={{ width: '80vw', backgroundColor: 'red', textAlign: 'left' }}>
+        <KLineChart klineInfos={klineInfos} height={400} />
+      </div>
+    </>
   );
 }
 
