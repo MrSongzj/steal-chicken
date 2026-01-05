@@ -3,11 +3,13 @@ import ReactECharts from "echarts-for-react";
 import type { KLineRaw } from "../services/api";
 
 interface Props {
+  title: string;
   klineInfos: KLineRaw[];
   height?: number;
 }
 
 const KLineChart: React.FC<Props> = ({
+  title,
   klineInfos,
   height = 300,
 }) => {
@@ -32,10 +34,10 @@ const KLineChart: React.FC<Props> = ({
       );
 
       values.push([
-        Number(open),
-        Number(close),
-        Number(low),
-        Number(high),
+        Number((+open).toFixed(5)),
+        Number((+close).toFixed(5)),
+        Number((+low).toFixed(5)),
+        Number((+high).toFixed(5)),
       ]);
     });
 
@@ -44,6 +46,10 @@ const KLineChart: React.FC<Props> = ({
 
   const option = {
     backgroundColor: "#fff",
+    title: {
+      text: title,
+      left: 0,
+    },
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -63,21 +69,21 @@ const KLineChart: React.FC<Props> = ({
       // }
     },
     grid: {
-      left: 10,
-      right: 10,
-      top: 10,
+      left: 80,
+      right: 50,
+      top: 65,
+      bottom: 115
     },
     xAxis: {
       type: "category",
       data: categoryData,
       max,
       boundaryGap: true,
-      axisLabel: {
-        margin: 15
-      }
+      offset: 30,
     },
     yAxis: {
       scale: true,
+      offset: 15,
       splitLine: {
         lineStyle: { color: "#eee" },
       },
@@ -95,18 +101,60 @@ const KLineChart: React.FC<Props> = ({
       end: 100
     }
   ],
+    legend: {
+      data: ['交易竞赛'],
+      top: 20
+    },
     series: [
       {
         type: "candlestick",
         barWidth: '90%',
         data: values,
         itemStyle: {
-          color: "#ef5350",       // 涨
-          color0: "#26a69a",      // 跌
-          borderColor: "#ef5350",
-          borderColor0: "#26a69a",
+          color: "#26a69a",       // 涨
+          color0: "#ef5350",      // 跌
+          borderColor: "#26a69a",
+          borderColor0: "#ef5350",
+        },
+        markPoint: {
+          symbolSize: 0,
+          label: {
+            color: '#333',
+            fontWeight: 'bold',
+          },
+          data: [
+            {
+              type: 'max',
+              valueDim: 'highest',
+              symbolOffset: [0, -10],
+            },
+            {
+              type: 'min',
+              valueDim: 'lowest',
+              symbolOffset: [0, 10],
+            }
+          ]
         },
       },
+      {
+        name: "交易竞赛",
+        type: "candlestick",
+        markArea: {
+          itemStyle: {
+            color: 'rgba(255, 0, 0, 0.2)',
+          },
+          data: [
+            [
+              {
+                coord: [0, Number.MAX_VALUE]
+              },
+              {
+                coord: [43, 0]
+              }
+            ]
+          ]
+        }
+      }
     ],
   };
 

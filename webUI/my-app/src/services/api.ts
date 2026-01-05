@@ -3,6 +3,7 @@ import axios from 'axios';
 export type AlphaTrace = {
   chainId: string;
   contractAddress: string;
+  symbol: string;
 };
 
 export type KLineRaw = [

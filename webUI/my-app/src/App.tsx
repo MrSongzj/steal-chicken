@@ -116,12 +116,14 @@ function App() {
   // const klineInfos = response.data.klineInfos as KLineRaw[];
 
   const [klineInfos, setKlineInfos] = useState<KLineRaw[]>([]);
+  const [klineTitle, setKlineTitle] = useState('');
 
   useEffect(() => {
     getAlphaTraceList().then(res => {
       if (res.length > 0) {
         const alpha = res[0];
         getKLines(alpha, '1h').then(klines => {
+          setKlineTitle(alpha.symbol);
           setKlineInfos(klines);
         });
       }
@@ -131,7 +133,7 @@ function App() {
   return (
     <>
       <div style={{ width: '80vw', backgroundColor: 'red', textAlign: 'left' }}>
-        <KLineChart klineInfos={klineInfos} height={400} />
+        <KLineChart title={klineTitle} klineInfos={klineInfos} height={400} />
       </div>
     </>
   );
