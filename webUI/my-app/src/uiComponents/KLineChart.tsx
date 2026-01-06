@@ -55,18 +55,6 @@ const KLineChart: React.FC<Props> = ({
       axisPointer: {
         type: "cross",
       },
-      // formatter: (params: [any]) => {
-      //   // const { name, value } = params;
-      //   // 必须进行 HTML 转义。
-      //   // 否则，如果 name 或 value 中含有功能性字符，如 '<' '>' 等，
-      //   // 则可能渲染不正确。
-      //   // 同时，如果 name 或 value 的值来自于“非受信任”的来源，则可能被注入恶意代码；
-      //   // 如果未被转义，则会被运行。
-      //   return '<b>' + params[0].name + '</b>';
-      //   // 注：`echarts.format.encodeHTML` 是个工具函数，把特殊字符
-      //   //  （'&'、'<'、'>'、'"'、"'"）转换成他们对应的 HTML entities.
-      //   //  这只是个例子，任何 HTML 转义工具函数都可使用。
-      // }
     },
     grid: {
       left: 80,

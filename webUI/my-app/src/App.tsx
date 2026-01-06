@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
-import KLineChart from "./uiComponents/KLineChart";
 import { getAlphaTraceList, getKLines, type KLineRaw } from "./services/api";
+import { tradingCompetitionList, type TradingCompetitionInfo } from "./services/config";
+import ReactECharts from "echarts-for-react";
 
 // const response = {
 //   data: {
@@ -86,55 +85,209 @@ export const response = {
 
 
 function App() {
-  // const [count, setCount] = useState(0);
-
-  // return (
-  //   <>
-  //     <div>
-  //       <a href="https://vite.dev" target="_blank">
-  //         <img src={viteLogo} className="logo" alt="Vite logo" />
-  //       </a>
-  //       <a href="https://react.dev" target="_blank">
-  //         <img src={reactLogo} className="logo react" alt="React logo" />
-  //       </a>
-  //     </div>
-  //     <h1>Vite + React</h1>
-  //     <div className="card">
-  //       <button onClick={() => setCount((count) => count + 1)}>
-  //         count is {count}
-  //       </button>
-  //       <p>
-  //         Edit <code>src/App.tsx</code> and save to test HMR
-  //       </p>
-  //     </div>
-  //     <p className="read-the-docs">
-  //       Click on the Vite and React logos to learn more
-  //     </p>
-  //   </>
-  // )
 
   // const klineInfos = response.data.klineInfos as KLineRaw[];
 
-  const [klineInfos, setKlineInfos] = useState<KLineRaw[]>([]);
-  const [klineTitle, setKlineTitle] = useState('');
+  const [alphaList, setAlphaList] = useState<string[]>([]);
+  const [klineInfos, setKlineInfos] = useState<Record<string, KLineRaw[]>>({});
 
   useEffect(() => {
-    getAlphaTraceList().then(res => {
+    getAlphaTraceList().then(async res => {
       if (res.length > 0) {
-        const alpha = res[0];
-        getKLines(alpha, '1h').then(klines => {
-          setKlineTitle(alpha.symbol);
-          setKlineInfos(klines);
-        });
+        const activityAlphaSymbols = tradingCompetitionList.map(item => item.symbol);
+        const alphaList = res.filter(item => activityAlphaSymbols.includes(item.symbol));
+        if (alphaList.length > 0) {
+          const kLineInfo: Record<string, KLineRaw[]> = {};
+          const validAlphaList: string[] = [];
+          await Promise.all(
+            alphaList.map(async alpha => {
+              const r = await getKLines(alpha, '1h');
+              if (r.length > 0) {
+                kLineInfo[alpha.symbol] = r;
+                validAlphaList.push(alpha.symbol);
+              }
+            })
+          );
+          setAlphaList([...validAlphaList]);
+          setKlineInfos(kLineInfo);
+        }
       }
     });
   }, []);
 
+  function getOption(activityInfo: TradingCompetitionInfo, klineInfos: KLineRaw[]) {
+    const pages = Math.ceil(klineInfos.length / 24)
+    const max = pages * 24;
+    const start = 100 - Math.ceil(1 / pages * 100);
+    const categoryData: string[] = [];
+    const values: number[][] = [];
+    let activityStartIndex = -1;
+    let activityEndIndex = -1;
+
+    klineInfos.forEach((item, index) => {
+      const [
+        startTime,
+        open,
+        high,
+        low,
+        close,
+      ] = item;
+
+      const startDate = new Date(Number(startTime)).toLocaleString(['zh'], {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+      }).slice(0, -4)
+      categoryData.push(startDate);
+
+      if (activityInfo.start.slice(0, -3) === startDate.slice(0, -3)) {
+        activityStartIndex = index;
+      }
+      if (activityInfo.end.slice(0, -3) === startDate.slice(0, -3)) {
+        activityEndIndex = index;
+      }
+
+      console.log('szj', activityInfo.start.slice(0, -3), startDate.slice(0, -3))
+
+      values.push([
+        Number((+open).toFixed(5)),
+        Number((+close).toFixed(5)),
+        Number((+low).toFixed(5)),
+        Number((+high).toFixed(5)),
+      ]);
+    });
+
+    const options: any = {
+      backgroundColor: "#fff",
+      title: {
+        text: activityInfo.symbol,
+        left: 0,
+      },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: {
+          type: "cross",
+        },
+      },
+      grid: {
+        left: 80,
+        right: 50,
+        top: 65,
+        bottom: 115
+      },
+      xAxis: {
+        type: "category",
+        data: categoryData,
+        max,
+        boundaryGap: true,
+        offset: 30,
+      },
+      yAxis: {
+        scale: true,
+        offset: 15,
+        splitLine: {
+          lineStyle: { color: "#eee" },
+        },
+      },
+      dataZoom: [
+        {
+          type: 'inside',
+          start,
+          end: 100
+        },
+        {
+          show: true,
+          type: 'slider',
+          start,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          type: "candlestick",
+          barWidth: '90%',
+          data: values,
+          itemStyle: {
+            color: "#26a69a",       // 涨
+            color0: "#ef5350",      // 跌
+            borderColor: "#26a69a",
+            borderColor0: "#ef5350",
+          },
+          markPoint: {
+            symbolSize: 0,
+            label: {
+              color: '#333',
+              fontWeight: 'bold',
+            },
+            data: [
+              {
+                type: 'max',
+                valueDim: 'highest',
+                symbolOffset: [0, -10],
+              },
+              {
+                type: 'min',
+                valueDim: 'lowest',
+                symbolOffset: [0, 10],
+              }
+            ]
+          },
+        }
+      ],
+    };
+
+    if (activityStartIndex !== -1 && activityEndIndex !== -1) {
+      // 交易竞赛信息
+      options.legend = {
+        data: ['交易竞赛'],
+        top: 20
+      };
+      options.series.push(
+        {
+          name: "交易竞赛",
+          type: "candlestick",
+          markArea: {
+            itemStyle: {
+              color: 'rgba(255, 0, 0, 0.2)',
+            },
+            data: [
+              [
+                {
+                  coord: [activityStartIndex, Number.MAX_VALUE]
+                },
+                {
+                  coord: [activityEndIndex, 0]
+                }
+              ]
+            ]
+          }
+        })
+    }
+
+    return options;
+  }
+  
+  useEffect(() => {
+    console.log('szj222', alphaList);
+  }, [alphaList])
+    
+
   return (
     <>
-      <div style={{ width: '80vw', backgroundColor: 'red', textAlign: 'left' }}>
-        <KLineChart title={klineTitle} klineInfos={klineInfos} height={400} />
-      </div>
+    {alphaList.length > 0 && (
+        alphaList.map(item => (
+          <div style={{ width: '80vw', backgroundColor: 'red', textAlign: 'left' }}>
+            <ReactECharts
+              option={getOption(tradingCompetitionList.find(tc => tc.symbol === item) as TradingCompetitionInfo, klineInfos[item])}
+              style={{ height: 400 }}
+              notMerge
+              lazyUpdate
+            />
+          </div>
+        ))
+      )
+      }
     </>
   );
 }
